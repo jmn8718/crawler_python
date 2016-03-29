@@ -1,2 +1,3 @@
 **/*.pyc
-data/*.json
+data/**/*.json
+output/**/*.html

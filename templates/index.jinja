@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+</head>
+
+<body>
+
+<div id="content">
+  	<h1>{{ title }}</h1>
+  	{% for item in result %}
+  		{%for key in item %}
+  		<p>{{ key }}</p>
+  		<ul>
+			{%for value in item[key] %}
+	  		<li>{{ value |urlize(target='_blank') }}</li>
+			{% endfor %}
+  		</ul>	  		
+		{% endfor %}
+	{% endfor %}
+</div>
+
+</body>
+</html>

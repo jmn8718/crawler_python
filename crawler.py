@@ -9,7 +9,7 @@ def to_file(crawled):
 	timestamp = strftime("%Y%m%d%H%M%S", localtime())
 	print timestamp
 	#print json.dumps(crawled)
-	filename = timestamp + '_crawl.json'
+	filename = './data/'+timestamp + '_crawl.json'
 	with open(filename, 'w') as outfile:
 		json.dump(crawled, outfile, indent=2)
 
