@@ -16,7 +16,7 @@
   		<p>{{ key }}</p>
   		<ul>
 			{%for value in item[key] %}
-	  		<li>{{ value |urlize(target='_blank') }}</li>
+	  		<li>{{ value[0] |urlize(target='_blank') }} - {{ value[1] }}</li>
 			{% endfor %}
   		</ul>	  		
 		{% endfor %}

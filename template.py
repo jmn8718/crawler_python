@@ -1,10 +1,19 @@
 # Load the jinja library's namespace into the current module.
 import jinja2
+import sys
+import json
 
 def to_html_file(filename, content):
 	filePath = './output/' +filename +'.html'
 	with open( filePath, 'w') as outfile:
 		outfile.write(content)
+
+def read_json_file(filename):
+	filePath = 'data/' +filename
+	json_data = ''
+	with open(filePath) as json_file:
+		json_data = json.load(json_file)
+	return json_data
 
 def template(templateName, templateVars):
 	# In this case, we will load templates off the filesystem.
@@ -36,20 +45,11 @@ def template(templateName, templateVars):
 	return outputText
 
 def main(argv):
+	dataFileContent = read_json_file(argv[0])
+	
 	template('index',{ 	"title" : "Crawl Result",
-	                 	"result" : [{
-						  	"http://www.bbvaapimarket.com/": [
-							    "https://www.bbvaapimarket.com/web/api_market/cookies-policy", 
-							    "https://www.bbvaapimarket.com/web/api_market/home?p_p_auth=E1Z5mFGD&p_p_id=49&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&_49_struts_action=%2Fmy_sites%2Fview&_49_groupId=12308&_49_privateLayout=false", 
-							    "https://www.bbvaapimarket.com/web/api_market/home", 
-							    "https://www.bbvaapimarket.com/c/portal/login?p_l_id=12313"
-							    ]
-					    },{
-					    	"https://www.bbvaapimarket.com/web/api_market/cookies-policy": [
-							    "NotFound"
-							    ]
-					    }]
+	                 	"result" : [dataFileContent]
 		    })
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
