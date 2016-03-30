@@ -8,8 +8,12 @@ fi
 
 python crawler.py http://www.bbvaapimarket.com/
 
-#cd data
+FILE=$(ls -r data | head -1)
 
-#FILE=$(ls -r | head -1)
+if [ -f "data/$FILE" ]; then
+ 	echo 'file '$FILE' exist'
+ 	#python template.py $FILE
+else
+	echo 'No file to process'
+fi
 
-#python template.py $FILE
