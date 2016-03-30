@@ -35,7 +35,7 @@ def template(templateName, templateVars):
 	to_html_file(templateName,outputText)
 	return outputText
 
-def main():
+def main(argv):
 	template('index',{ 	"title" : "Crawl Result",
 	                 	"result" : [{
 						  	"http://www.bbvaapimarket.com/": [
