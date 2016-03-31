@@ -34,15 +34,17 @@ def template(templateName, templateVars):
 	# Read the template file using the environment object.
 	# This also constructs our Template object.
 	template = templateEnv.get_template( TEMPLATE_FILE )
-
 	# Specify any input variables to the template as a dictionary.
 	#templateVars = { "title" : "Test Example",
 	#                 "description" : "A simple inquiry of function." }
 
 	# Finally, process the template to produce our final text.
 	outputText = template.render( templateVars )
-	to_html_file(templateName,outputText)
-	return outputText
+
+	decoded_output = outputText.encode('ascii', 'ignore').decode('ascii')
+	to_html_file(templateName,decoded_output)
+
+	return decoded_output
 
 def main(argv):
 	dataFileContent = read_json_file(argv[0])
