@@ -1,4 +1,6 @@
 **/*.pyc
 data/**/*.json
+data_loop/**/*.txt
+data_loop/**/*.json
 output/**/*.html
 logs
