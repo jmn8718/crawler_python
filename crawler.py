@@ -4,57 +4,37 @@ import json
 from time import localtime, strftime
 import sys, os
 import logging
+from libs.io import to_file,save_loop
 
 TIMESTAMP = strftime("%Y%m%d%H%M%S", localtime())
 
 logging.basicConfig(filename='logs/'+TIMESTAMP+'_crawl.log',format='%(asctime)s : %(levelname)s:  %(message)s',  datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
 
+ANCHOR = 'Anchor'
 EXCEPTION_GET = 'exceptionGET'
 NOT_FOUND = 'NotFound'
 ERROR_404 = 'error404'
+NO_TITLE = 'NoTitle'
 MAIL_TO = 'mailto:'
 NOT_CRAWL = 'NotCrawl'
 BASE_URL = 'https://www.bbvaapimarket.com/'
 BASE_URL_WEB = 'https://www.bbvaapimarket.com/web/api_market/'
 BASE_URL_EXTENDED = 'https://www.bbvaapimarket.com/web/api_market/home'
 
-def to_file(crawled):
-	logging.info('to_file - start ')
-	print TIMESTAMP
-	#print json.dumps(crawled)
-	filename = 'data/'+TIMESTAMP + '_crawl.json'
-	logging.info('to_file - writing -  '+filename)
-	with open(filename, 'w') as outfile:
-		json.dump(crawled, outfile, indent=2)
-	logging.info('to_file - end')
+BASE_URL_PUBLIC = 'https://www.bbvaapimarket.com/web/api_market/'
+def get_base_url(url):
+	logging.info('GET BASE URL - '+url)
+	urlArray = []
+	urlArray.append('https://www.bbvaapimarket.com/' )
+	urlArray.append('https://www.bbvaapimarket.com' )
+	urlArray.append('www.bbvaapimarket.com/' )
+	urlArray.append('www.bbvaapimarket.com' )
+	urlArray.append('https://www.bbvaapimarket.com/web/api_market/' )
+	urlArray.append('https://www.bbvaapimarket.com/web/api_market' )
+	if url in urlArray:
+		return BASE_URL_EXTENDED
+	return url
 
-def save_loop(loop_number,to_crawl,crawled_urls,crawled):
-	logging.info('save loop - start ')	
-	try:
-		directory = 'data_loop/'+TIMESTAMP
-		if not os.path.exists(directory):
-			os.makedirs(directory)
-
-		filenameToCrawl = directory + '/{:04d}'.format(loop_number) + '_toCrawl.txt'
-		with open(filenameToCrawl, 'w') as outfileToCrawl:
-			for urlToCrawl in to_crawl:
-				outfileToCrawl.write(urlToCrawl + '\n')
-
-		filenameCrawledUrls = directory + '/{:04d}'.format(loop_number) + '_crawledUrls.txt'
-		with open(filenameCrawledUrls, 'w') as outfileCrawled:
-			for urlCrawled in crawled_urls:
-				outfileCrawled.write(urlCrawled + '\n')
-
-		filenameCrawled = directory + '/{:04d}'.format(loop_number) + '_crawled.json'
-		with open(filenameCrawled, 'w') as outfile:
-			json.dump(crawled, outfile, indent=2)
-		
-		logging.info('save loop - end ')	
-
-	except Exception as e:
-		print 'LOOP WRITE OUTPUT ERROR - '
-		print e
-		logging.error('LOOP WRITE OUTPUT ERROR '+ e)
 
 def get_all_links(html):
 	links = []
@@ -93,72 +73,88 @@ def resolve_url(url, href):
 
 	#TODO check if ../web/api  /web/api/reg
 	resolved_url = ''
+	try:
+		if href.find('/') == 0:
+			logging.debug(' RESOLVE URL - FOUND / LINK')
+			url_split = url.split('/')
+			href_split = href.split('/')
+			if href_split[1] in url_split:
+				index = url_split.index(href_split[1])
+				logging.debug(' RESOLVE URL - FOUND / LINK - INDEX - '+str(index))
+				resolved_url_splits = url_split[:index]+href_split[1:]
+				resolved_url = '/'.join(resolved_url_splits)
+			else:
+				logging.error(' RESOLVE URL - FOUND / LINK - NOT INDEX - ')
 
-	if href.find('/') == 0:
-		logging.debug(' RESOLVE URL - FOUND / LINK')
-		url_split = url.split('/')
-		href_split = href.split('/')
-		if href_split[1] in url_split:
-			index = url_split.index(href_split[1])
-			logging.debug(' RESOLVE URL - FOUND / LINK - INDEX - '+str(index))
-			resolved_url_splits = url_split[:index]+href_split[1:]
-			resolved_url = '/'.join(resolved_url_splits)
-		else:
-			logging.error(' RESOLVE URL - FOUND / LINK - NOT INDEX - ')
+		elif href.find('#') == 0:
+			logging.debug(' RESOLVE URL - FOUND PAGE LINK')
+			resolved_url = url + href
+		elif href.find('./') > -1:
+			logging.debug(' RESOLVE URL - FOUND ./ in HREF')
+			if url[-1]!='/':
+				url = url.split('/')[:-1]
+			else:
+				url = url.split('/')
+			resolved_url_splits = url + str(href).split('/')
+			#print resolved_url_splits
+			while '.' in resolved_url_splits:
+				resolved_url_splits.remove('.')
+			#print resolved_url_splits
+			while '..' in resolved_url_splits:
+				index = resolved_url_splits.index('..')
+				#print index
+				del resolved_url_splits[index]
+				del resolved_url_splits[index-1]
+				#print resolved_url_splits
 
-	elif href.find('#') == 0:
-		logging.debug(' RESOLVE URL - FOUND PAGE LINK')
-		resolved_url = url + href
-	elif href.find('../') > -1:
-		logging.debug(' RESOLVE URL - FOUND PREVIOUS PARENT PAGE - '+url)
-		count = len(href.split('../')-1)
-		resolved_url = '/'.join(url.split('/',-2)[:-3])		
-		logging.debug(' RESOLVE URL - FOUND PREVIOUS PARENT PAGE - SPLIT - '+resolved_url)
-		resolved_url += href
-	elif href.find('./') > -1:
-		logging.debug(' RESOLVE URL - FOUND NEXT CHILD PAGE - '+url)
-		resolved_url = url.rsplit('/',1)
-		resolved_url = resolved_url[0]
-		logging.debug(' RESOLVE URL - FOUND NEXT CHILD PAGE- SPLIT - '+resolved_url)
-		resolved_url += '/' + href[2:]
-	elif href.find('http') > -1:
-		logging.debug(' RESOLVE URL - FOUND FULL LINK PAGE')
-		resolved_url = href
-	elif url.find(href) > -1:
-		logging.debug(' RESOLVE URL - FOUND HREF INCLUDED IN URL - '+url)
-		resolved_url = url
-	elif href.find(MAIL_TO) > -1:
-		logging.debug(' RESOLVE URL - FOUND MAILTO')
-		resolved_url = MAIL_TO
-	else: # EX.: href='products'
-		logging.debug(' RESOLVE URL - FOUND CHILD PAGE - '+url)
-		if url[-1] == '/': 
-			resolved_url = url+ href
-		else:
-			resolved_url = url.rsplit('/',1)[0] + '/' + href
-		logging.debug(' RESOLVE URL - FOUND CHILD PAGE- SPLIT - '+resolved_url)
+			resolved_url='/'.join(resolved_url_splits)
+		elif href.find('http') > -1:
+			logging.debug(' RESOLVE URL - FOUND FULL LINK PAGE')
+			resolved_url = href
+		elif url.find(href) > -1:
+			logging.debug(' RESOLVE URL - FOUND HREF INCLUDED IN URL - '+url)
+			resolved_url = url
+		elif href.find(MAIL_TO) > -1:
+			logging.debug(' RESOLVE URL - FOUND MAILTO')
+			resolved_url = MAIL_TO
+		else: # EX.: href='products'
+			logging.debug(' RESOLVE URL - FOUND CHILD PAGE - '+url)
+			if url[-1] == '/': 
+				resolved_url = url+ href
+			else:
+				resolved_url = url.rsplit('/',1)[0] + '/' + href
+			logging.debug(' RESOLVE URL - FOUND CHILD PAGE- SPLIT - '+resolved_url)
+	except Exception as e:
+		logging.error('EXCEPT - resolve_url - '+url)
 
 	logging.info('RESOLVED URL - '+resolved_url)
 	return resolved_url
 
-def evaluate_content(url, soap_content):
+def evaluate_content(url, soup_content):
 	try:
+		logging.info('EVALUATE CONTENT')
 		result = []
 
-		unique_links = get_unique_links(soap_content)
+		unique_links = get_unique_links(soup_content)
 		for link in unique_links:
+
+			logging.warning('\n\n '+str(link)+' \n\n')
 			resolved_link = resolve_url(url, link)
-			logging.warning(resolved_link)
-			if resolved_link.find(MAIL_TO) > -1:
+			logging.warning('\n\n '+resolved_link+' \n\n')
+			if link.find('#') == 0:
+				logging.debug('URL: '+url)
+				logging.debug('ANCHOR: '+link)
+				result.append([link,ANCHOR])
+			elif resolved_link.find(MAIL_TO) > -1:
 				logging.debug('MAIL_TO: '+link)
 				result.append([link,MAIL_TO])
-			elif resolved_link.find('/web/guest') > -1:
+			elif resolved_link.find('/web/guest') > -1 or resolved_link.find('file://') > -1 or resolved_link.find('.zip') > -1 or resolved_link.find('.pdf') > -1:
 				logging.debug('NOT CRAWL LINK : '+link)
-				logging.debug('NOT CRAWL RESOLVED LINK: '+str(resolved_link.encode('ascii', 'ignore').decode('ascii')))
+				logging.debug('NOT CRAWL RESOLVED LINK: '+resolved_link.encode('ascii', 'ignore').decode('ascii'))
 				result.append([link,NOT_CRAWL])
 			else:
 				link_content = get_url_content(resolved_link)
-				logging.warning(resolved_link)
+				logging.warning('ELSE-----------------')
 				
 				if link_content is EXCEPTION_GET:
 					logging.debug('EXCEPTION_GET: '+link)
@@ -169,21 +165,28 @@ def evaluate_content(url, soap_content):
 				else:
 					logging.debug('URL: '+link)
 					soup_link = BeautifulSoup(link_content, 'html.parser')
-					if soup_link.title is not None and :
+					logging.info('EVALUATE CONTENT - SOUP ---\n'+link)
+					if soup_link.title is not None and soup_link.title.string is not None:
 						logging.debug('URL - TITLE: '+soup_link.title.string.encode('ascii', 'ignore').decode('ascii'))
 						#TODO CHECK
 						result.append([link,soup_link.title.string.encode('ascii', 'ignore').decode('ascii')])
 					else:
-						logging.debug('URL - 404')
-						result.append([link,ERROR_404])
+						print 'here?? ' + link
+						if len(soup_link.find_all("section", class_=ERROR_404)) == 0:
+							logging.debug('URL - No title')
+							result.append([link,NO_TITLE])
+						else:
+							logging.debug('URL - 404')							
+							result.append([link,ERROR_404])
 
 
+		#logging.info('EVALUATE CONTENT '+str(result))
 		return result
 	except Exception as e:
 		print 'EXCEPT - EVALUATE CONTENT - '
 		print e
 		logging.error('EXCEPT - EVALUATE CONTENT - '+url)
-		return ERROR_404
+		return ([link,ERROR_404])
 
 def add_to_list(listToAdd, toAdd):
 	for item in toAdd:
@@ -205,6 +208,7 @@ def crawl_web(seed):
 	count = 0
 	while len(to_crawl)>0: # and count<=5:
 		url = to_crawl.pop()
+		url = get_base_url(url)
 		logging.info('TO CRAWL: '+url)
 		if url.find('#') > -1:
 			url = url.split('#')[0]
@@ -240,12 +244,12 @@ def crawl_web(seed):
 						crawled[url]=links
 
 						for link in links:
-							#print str(links)
-							logging.debug('NEW URLS TO CRAWL - '+link[0])
-							resolved_link = resolve_url(url,link[0])
-							if resolved_link not in crawled_urls and resolved_link not in to_crawl and resolved_link.find('bbvaapimarket')>-1 and resolved_link!=NOT_CRAWL:
-								logging.debug('NEW URLS TO CRAWL - ADDED - '+link[0])
-								to_crawl.append(resolved_link)
+							if link[0].find('#') != 0:
+								logging.debug('NEW URLS TO CRAWL - '+link[0])
+								resolved_link = resolve_url(url,link[0])
+								if resolved_link not in crawled_urls and resolved_link not in to_crawl and resolved_link.find('bbvaapimarket')>-1 and link[1]!=NOT_CRAWL:
+									logging.debug('NEW URLS TO CRAWL - ADDED - '+link[0])
+									to_crawl.append(resolved_link)
 
 				else:
 					logging.warning('ERROR_404:' +url)
@@ -254,13 +258,14 @@ def crawl_web(seed):
 				logging.info('CRAWLED: '+url)
 		else:
 			logging.warning('PAGE TO NOT CRAWL: '+url)
-		save_loop(count,to_crawl,crawled_urls,crawled)
+		save_loop(TIMESTAMP, count,to_crawl,crawled_urls,crawled)
 
 	print count
 	if len(crawled)>0:
-		for key in crawled:
-			print key
-	to_file(crawled)
+		crawled_sorted=  sorted(crawled)
+		for url_crawled in crawled_sorted:
+			print url_crawled
+	to_file(TIMESTAMP, crawled)
 	print 'Done crawling'
 	logging.info('END CRAWL_WEB PROCESS')
 

@@ -6,7 +6,8 @@ else
 	mkdir logs
 fi
 
-python crawler.py http://www.bbvaapimarket.com/
+#python crawler.py http://www.bbvaapimarket.com/
+python main.py PRO
 
 FILE=$(ls -r data | head -1)
 
@@ -17,3 +18,11 @@ else
 	echo 'No file to process'
 fi
 
+#PROJECT_ID=dev-center/raml
+#TOKEN=iZ8f2RZkT5zLhEFaE1BA
+#FILE_ID=s
+#curl https://gitlab.digitalservices.es/api/v3/projects/333/repository/tree?private_token=$TOKEN -k
+
+#curl -k https://gitlab.digitalservices.es/dev-center/raml/raw/develop/US_Security.raml?private_token=$TOKEN
+
+#https://gitlab.digitalservices.es/dev-center/raml/raw/develop/US_Security.raml?private_token=iZ8f2RZkT5zLhEFaE1BA

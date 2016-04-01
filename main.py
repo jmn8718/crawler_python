@@ -12,9 +12,10 @@ except Exception as e:
 def main(argv):
 	environment = argv[0].lower()
 	base_url = config.get(environment,'BASE_URL')
-	print 'BASE_URL: '+base_url
+	#print 'BASE_URL: '+base_url
 	base_url_extended = config.get(environment,'BASE_URL_EXTENDED')
-	print 'BASE_URL_EXTENDED: '+base_url_extended
+	#print 'BASE_URL_EXTENDED: '+base_url_extended
+	#crawl_web_with_prop('https://www.bbvaapimarket.com/web/api_market/bbva/paystats/documentation', base_url_extended)
 	crawl_web_with_prop(base_url, base_url_extended)
 
 if __name__ == "__main__":
