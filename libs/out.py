@@ -64,7 +64,9 @@ def evaluate_crawled(crawled):
 
 	logging.info('evaluate_crawled - end ')
 	for error in errors:
-		slack_message = str(errors)
+		slack_message = 'URL:' + error[0]
+		slack_message += 'LINK: ' + error[1]
+		slack_message += 'ERROR: ' + error[2]
 		sendSlack(slack_message)
 	return errors
 
