@@ -17,7 +17,7 @@ def sendSlack(message):
 		formatedMessage += '\n----------------------------------\n'
 		sc = SlackClient(SLACK_TOKEN)
 		result_bot = sc.api_call(
-		    "chat.postMessage", channel=SLACK_CHANNEL, text=message,
+		    "chat.postMessage", channel=SLACK_CHANNEL, text=formatedMessage,
 		    username=SLACK_USERNAME, icon_emoji=SLACK_EMOJI
 		)
 		if(result_bot['ok']==True):
