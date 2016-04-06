@@ -47,7 +47,7 @@ def evaluate(crawled, stringCondition):
 		print e	
 	return	result
 
-def evaluate_crawled(crawled):
+def evaluate_crawled(timestamp, crawled):
 	logging.info('evaluate_crawled - start ')
 
 	keywords = []

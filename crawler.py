@@ -275,7 +275,7 @@ def crawl_web(seed):
 		for url_crawled in crawled_sorted:
 			print url_crawled
 	to_file(TIMESTAMP, crawled)
-	evaluate_crawled(crawled)
+	evaluate_crawled(TIMESTAMP, crawled)
 	print 'Done crawling'
 	logging.info('END CRAWL_WEB PROCESS')
 
