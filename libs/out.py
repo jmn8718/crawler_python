@@ -12,9 +12,8 @@ SLACK_EMOJI = ':loudspeaker:'
 
 def sendSlack(message):
 	try:
-		formatedMessage = '----------------------------------\n'
+		formatedMessage = '\n----------------------------------\n'
 		formatedMessage += message
-		formatedMessage += '\n----------------------------------\n'
 		sc = SlackClient(SLACK_TOKEN)
 		result_bot = sc.api_call(
 		    "chat.postMessage", channel=SLACK_CHANNEL, text=formatedMessage,
@@ -63,9 +62,12 @@ def evaluate_crawled(crawled):
 		errors += evaluate(crawled, keyword)
 
 	logging.info('evaluate_crawled - end ')
+	if len(errors) > 0 :
+		slack_message = 'CRAWLER EXECUTION TIMESTAMP : '+ TIMESTAMP + '\n'
+		sendSlack(slack_message)
 	for error in errors:
-		slack_message = 'URL:' + error[0]
-		slack_message += 'LINK: ' + error[1]
+		slack_message = 'URL:' + error[0] + '\n'
+		slack_message += 'LINK: ' + error[1] + '\n'
 		slack_message += 'ERROR: ' + error[2]
 		sendSlack(slack_message)
 	return errors
