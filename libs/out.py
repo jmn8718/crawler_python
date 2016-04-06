@@ -12,6 +12,9 @@ SLACK_EMOJI = ':loudspeaker:'
 
 def sendSlack(message):
 	try:
+		formatedMessage = '----------------------------------\n'
+		formatedMessage += message
+		formatedMessage += '\n----------------------------------\n'
 		sc = SlackClient(SLACK_TOKEN)
 		result_bot = sc.api_call(
 		    "chat.postMessage", channel=SLACK_CHANNEL, text=message,
