@@ -5,3 +5,4 @@ data_loop/**/*.txt
 data_loop/**/*.json
 output/**/*.html
 logs
+test_*.sh

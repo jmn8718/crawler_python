@@ -16,7 +16,9 @@ def main(argv):
 	base_url_extended = config.get(environment,'BASE_URL_EXTENDED')
 	#print 'BASE_URL_EXTENDED: '+base_url_extended
 	#crawl_web_with_prop('https://www.bbvaapimarket.com/web/api_market/bbva/paystats/documentation', base_url_extended)
+	#crawl_web_with_prop('https://www.bbvaapimarket.com/web/api_market/register', base_url_extended)
 	crawl_web_with_prop(base_url, base_url_extended)
+
 
 if __name__ == "__main__":
 	try:

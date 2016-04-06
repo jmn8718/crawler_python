@@ -2,6 +2,7 @@
 import jinja2
 import sys
 import json
+import csv
 
 def to_html_file(filename, content):
 	filePath = './output/' +filename +'.html'
@@ -14,6 +15,15 @@ def read_json_file(filename):
 	with open(filePath) as json_file:
 		json_data = json.load(json_file)
 	return json_data
+
+def read_csv_file(filename):
+	filePath = 'data/' +filename
+	fileContent = csv.reader(open(filePath,"rb"), delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+	result = []
+	for row in fileContent:
+		print row
+		result.append(row)
+	return result
 
 def template(templateName, templateVars):
 	# In this case, we will load templates off the filesystem.
@@ -46,12 +56,23 @@ def template(templateName, templateVars):
 
 	return decoded_output
 
-def main(argv):
+def template_full(argv):
 	dataFileContent = read_json_file(argv[0])
 	
-	template('index',{ 	"title" : "Crawl Result",
+	template('report_full',{ 	"title" : "Crawl Result",
 	                 	"result" : [dataFileContent]
 		    })
+
+def template_errors(argv):
+	dataFileContent = read_csv_file(argv[0])
+	template('report_errors_table', {
+			"title" : "Crawl Result",
+			"result" : [dataFileContent]
+		})
+
+def main(argv):
+	#template_full(argv)
+	template_errors(argv)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

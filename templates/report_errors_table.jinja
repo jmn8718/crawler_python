@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+</head>
+
+<body>
+
+<div id="content">
+    <h1>{{ title }}</h1>
+    <table>
+    {% for content in result %}
+	    {% for index in content %}
+	      <tr>
+	        <td>{{ index[0] |urlize(target='_blank') }}</td>
+          <td>{{ index[1] }}</td>
+          <td>{{ index[2] }}</td>
+	      </tr>        
+    	{% endfor %}     
+    {% endfor %}
+    </table>
+</div>
+
+</body>
+</html>

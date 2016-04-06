@@ -4,7 +4,7 @@ import json
 from time import localtime, strftime
 import sys, os
 import logging
-from libs.io import to_file,save_loop
+from libs.out import to_file,save_loop, evaluate_crawled
 
 TIMESTAMP = strftime("%Y%m%d%H%M%S", localtime())
 
@@ -22,6 +22,7 @@ BASE_URL_WEB = 'https://www.bbvaapimarket.com/web/api_market/'
 BASE_URL_EXTENDED = 'https://www.bbvaapimarket.com/web/api_market/home'
 
 BASE_URL_PUBLIC = 'https://www.bbvaapimarket.com/web/api_market/'
+
 def get_base_url(url):
 	logging.info('GET BASE URL - '+url)
 	urlArray = []
@@ -117,6 +118,10 @@ def resolve_url(url, href):
 		elif href.find(MAIL_TO) > -1:
 			logging.debug(' RESOLVE URL - FOUND MAILTO')
 			resolved_url = MAIL_TO
+
+		elif href.find('javascript:void(0)') > -1:
+			logging.debug(' RESOLVE URL - FOUND javascript:void(0)')
+			resolved_url = NOT_CRAWL
 		else: # EX.: href='products'
 			logging.debug(' RESOLVE URL - FOUND CHILD PAGE - '+url)
 			if url[-1] == '/': 
@@ -148,6 +153,9 @@ def evaluate_content(url, soup_content):
 			elif resolved_link.find(MAIL_TO) > -1:
 				logging.debug('MAIL_TO: '+link)
 				result.append([link,MAIL_TO])
+			elif resolved_link.find(NOT_CRAWL) > -1:
+				logging.debug('NOT_CRAWL: '+link)
+				result.append([link,NOT_CRAWL])
 			elif resolved_link.find('/web/guest') > -1 or resolved_link.find('file://') > -1 or resolved_link.find('.zip') > -1 or resolved_link.find('.pdf') > -1:
 				logging.debug('NOT CRAWL LINK : '+link)
 				logging.debug('NOT CRAWL RESOLVED LINK: '+resolved_link.encode('ascii', 'ignore').decode('ascii'))
@@ -171,12 +179,13 @@ def evaluate_content(url, soup_content):
 						#TODO CHECK
 						result.append([link,soup_link.title.string.encode('ascii', 'ignore').decode('ascii')])
 					else:
-						print 'here?? ' + link
+						print 'EVALUATING-> ' + link
+						print resolved_link
 						if len(soup_link.find_all("section", class_=ERROR_404)) == 0:
-							logging.debug('URL - No title')
+							logging.warning('URL - No title')
 							result.append([link,NO_TITLE])
 						else:
-							logging.debug('URL - 404')							
+							logging.warning('URL - 404')							
 							result.append([link,ERROR_404])
 
 
@@ -247,7 +256,7 @@ def crawl_web(seed):
 							if link[0].find('#') != 0:
 								logging.debug('NEW URLS TO CRAWL - '+link[0])
 								resolved_link = resolve_url(url,link[0])
-								if resolved_link not in crawled_urls and resolved_link not in to_crawl and resolved_link.find('bbvaapimarket')>-1 and link[1]!=NOT_CRAWL:
+								if resolved_link not in crawled_urls and resolved_link not in to_crawl and resolved_link.find('bbvaapimarket')>-1 and link[1]!=NOT_CRAWL and link[1]!=ERROR_404:
 									logging.debug('NEW URLS TO CRAWL - ADDED - '+link[0])
 									to_crawl.append(resolved_link)
 
@@ -266,12 +275,13 @@ def crawl_web(seed):
 		for url_crawled in crawled_sorted:
 			print url_crawled
 	to_file(TIMESTAMP, crawled)
+	evaluate_crawled(crawled)
 	print 'Done crawling'
 	logging.info('END CRAWL_WEB PROCESS')
 
 def crawl_web_with_prop(base, base_extended):
-	BASE_URL = base
-	BASE_URL_EXTENDED = base_extended
+	#BASE_URL = base
+	#BASE_URL_EXTENDED = base_extended
 	crawl_web(base)
 
 def main(argv):
