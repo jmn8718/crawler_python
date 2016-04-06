@@ -63,7 +63,7 @@ def evaluate_crawled(timestamp, crawled):
 
 	logging.info('evaluate_crawled - end ')
 	if len(errors) > 0 :
-		slack_message = 'CRAWLER EXECUTION TIMESTAMP : '+ TIMESTAMP + '\n'
+		slack_message = 'CRAWLER EXECUTION TIMESTAMP : '+ timestamp + '\n'
 		sendSlack(slack_message)
 	for error in errors:
 		slack_message = 'URL:' + error[0] + '\n'
